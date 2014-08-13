@@ -63,9 +63,11 @@ func main() {
 
 	fmt.Printf("-----> Building %s...\n", app.Name)
 
+	envURL := blobstoreEnvVars(blobstoreHost, prevRelease.Env)
+
 	var output bytes.Buffer
 	slugURL := fmt.Sprintf("http://%s/%s.tgz", blobstoreHost, random.UUID())
-	cmd := exec.Command(exec.DockerImage("flynn/slugbuilder", os.Getenv("SLUGBUILDER_IMAGE_ID")), slugURL)
+	cmd := exec.Command(exec.DockerImage("flynn/slugbuilder", os.Getenv("SLUGBUILDER_IMAGE_ID")), slugURL, envURL)
 	cmd.Stdout = io.MultiWriter(os.Stdout, &output)
 	cmd.Stderr = os.Stderr
 	stdin, err := cmd.StdinPipe()
@@ -166,7 +168,7 @@ func appendEnvDir(stdin io.Reader, pipe io.WriteCloser, env map[string]string) {
 	for key, value := range env {
 		hdr := &tar.Header{
 			Name:    path.Join("env", key),
-			Mode:    0400,
+			Mode:    0444,
 			ModTime: time.Now(),
 			Size:    int64(len(value)),
 		}
@@ -180,7 +182,7 @@ func appendEnvDir(stdin io.Reader, pipe io.WriteCloser, env map[string]string) {
 	}
 	hdr := &tar.Header{
 		Name:    ".ENV_DIR_bdca46b87df0537eaefe79bb632d37709ff1df18",
-		Mode:    0400,
+		Mode:    0444,
 		ModTime: time.Now(),
 		Size:    0,
 	}

@@ -31,8 +31,7 @@ main() {
 }
 
 info() {
-  local msg=$1
-  echo "==> $msg"
+  echo "==> $1"
 }
 
 boot_libvirt_lxc() {
