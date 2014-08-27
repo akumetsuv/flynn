@@ -40,6 +40,8 @@ func runRoute(args *docopt.Args, client *controller.Client) error {
 	if args.Bool["add"] {
 		if args.String["-t"] == "http" {
 			return runRouteAddHTTP(args, client)
+		} else if args.String["-t"] == "tcp" {
+			return runRouteAddTCP(args, client)
 		} else {
 			return fmt.Errorf("Route type %s not supported.", args.String["-t"])
 		}
@@ -126,6 +128,32 @@ func runRouteAddHTTP(args *docopt.Args, client *controller.Client) error {
 	}
 	fmt.Println(route.ID)
 	return nil
+}
+
+func runRouteAddTCP(args *docopt.Args, client *controller.Client) error {
+ var port int
+    port, err := strconv.Atoi(args.String["<domain>"])
+    if err != nil {
+        return err
+    }
+
+ var routeTCPService string
+ if args.String["--service"] == "" {
+  routeTCPService = mustApp() + "-web"
+ } else {
+  routeTCPService = args.String["--service"]
+ }
+
+ hr := &router.TCPRoute{
+  Service: routeTCPService,
+  Port:  port,
+ }
+ route := hr.ToRoute()
+ if err := client.CreateRoute(mustApp(), route); err != nil {
+  return err
+ }
+ fmt.Println(route.ID)
+ return nil
 }
 
 func readPEM(typ string, path string, stdin []byte) ([]byte, error) {
