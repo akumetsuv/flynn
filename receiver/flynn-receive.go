@@ -63,11 +63,9 @@ func main() {
 
 	fmt.Printf("-----> Building %s...\n", app.Name)
 
-	envURL := blobstoreEnvVars(blobstoreHost, prevRelease.Env)
-
 	var output bytes.Buffer
 	slugURL := fmt.Sprintf("http://%s/%s.tgz", blobstoreHost, random.UUID())
-	cmd := exec.Command(exec.DockerImage("flynn/slugbuilder", os.Getenv("SLUGBUILDER_IMAGE_ID")), slugURL, envURL)
+	cmd := exec.Command(exec.DockerImage("flynn/slugbuilder", os.Getenv("SLUGBUILDER_IMAGE_ID")), slugURL)
 	cmd.Stdout = io.MultiWriter(os.Stdout, &output)
 	cmd.Stderr = os.Stderr
 	stdin, err := cmd.StdinPipe()
