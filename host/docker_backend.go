@@ -106,19 +106,24 @@ func (d *DockerBackend) Run(job *host.Job) error {
 		hostConfig.PortBindings[docker.Port(port+"/"+p.Proto)] = []docker.PortBinding{{HostPort: port, HostIp: d.bindAddr}}
 	}
 
+	for k, v := range job.Config.Env {
+		if strings.Contains(k, "MountGluster") {
+			job.Config.Mounts = []host.Mount{ host.Mount{ "/mnt/" + v, "/mnt/glusterfs/" + v, true } }
+		}
+	}
+
 	hostConfig.Binds = make([]string, 0, len(job.Config.Mounts))
 	for _, m := range job.Config.Mounts {
-		if m.Target == "" {
-			config.Volumes[m.Location] = struct{}{}
-		} else {
+		if m.Target != "" {
 			bind := fmt.Sprintf("%s:%s:", m.Target, m.Location)
-			if m.Writeable {
-				bind += "rw"
-			} else {
-				bind += "ro"
-			}
+				if m.Writeable {
+					bind += "rw"
+				} else {
+					bind += "ro"
+				}
 			hostConfig.Binds = append(hostConfig.Binds, bind)
 		}
+		config.Volumes[m.Location] = struct{}{}
 	}
 
 	if strings.HasPrefix(job.ID, "flynn-") {
@@ -147,6 +152,7 @@ func (d *DockerBackend) Run(job *host.Job) error {
 	d.state.SetContainerID(job.ID, container.ID)
 	d.state.WaitAttach(job.ID)
 	g.Log(grohl.Data{"at": "start_container"})
+
 	if err := d.docker.StartContainer(container.ID, hostConfig); err != nil {
 		g.Log(grohl.Data{"at": "start_container", "status": "error", "err": err})
 		return err

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"text/template"
@@ -220,20 +219,6 @@ func (m *manifestRunner) runManifest(r io.Reader) (map[string]*ManifestData, err
 		if len(job.Config.Ports) == 0 {
 			job.Config.Ports = []host.Port{{Proto: "tcp"}}
 		}
-
-
-    for k, v := range job.Config.Env {
-      if strings.Contains(k, "MountGluster") {
-        glusterData := strings.Split(v, "#")
-        remote, local, flynn := glusterData[0], glusterData[1], glusterData[2]
-        exec.Command("sudo", "mkdir", "-p", local).Run()
-        exec.Command("sudo", "mount", "-t", "glusterfs", remote, local).Run()
-        job.Config.Mounts = []host.Mount{ host.Mount{ local, flynn, true } }
-        delete(job.Config.Env, k)
-      }
-    }
-
-
 		if err := m.backend.Run(job); err != nil {
 			return nil, err
 		}

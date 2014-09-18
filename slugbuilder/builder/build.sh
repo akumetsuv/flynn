@@ -15,7 +15,6 @@ env_dir=/env
 build_root=/tmp/build
 cache_root=/tmp/cache
 buildpack_root=/tmp/buildpacks
-env_cookie=.ENV_DIR_bdca46b87df0537eaefe79bb632d37709ff1df18
 
 mkdir -p $app_dir
 mkdir -p $cache_root
@@ -46,21 +45,15 @@ function ensure_indent() {
       echo $'\e[1G      ' "$line" | output_redirect
     fi
 
-  done 
+  done
 }
 
-cd $app_dir
-
 ## Load source from STDIN
+cd /
+
 cat | tar -xm
 
-
-if [[ -f "$env_cookie" ]]; then
-    mv /app /apptmp
-    mv /apptmp/* /
-    rm -r /apptmp
-    cd $app_dir
-fi
+cd $app_dir
 
 # In heroku, there are two separate directories, and some
 # buildpacks expect that.
@@ -103,7 +96,7 @@ if [[ -n "$selected_buildpack" ]]; then
 fi
 
 ## Buildpack compile
-if [[ -f "$env_cookie" ]]; then
+if [ "$(ls -A $env_dir)" ]; then
   $selected_buildpack/bin/compile "$build_root" "$cache_root" "$env_dir" | ensure_indent
 else
   $selected_buildpack/bin/compile "$build_root" "$cache_root" | ensure_indent
@@ -132,12 +125,12 @@ if [[ -f "$build_root/.slugignore" ]]; then
 else
 	tar --exclude='.git' --use-compress-program=pigz -C $build_root -cf $slug_file . | cat
 fi
-  
+
 if [[ "$slug_file" != "-" ]]; then
 	slug_size=$(du -Sh "$slug_file" | cut -f1)
 	echo_title "Compiled slug size is $slug_size"
 
 	if [[ $put_url ]]; then
-		curl -0 -s -o /dev/null -X PUT -T $slug_file "$put_url" 
+		curl -0 -s -o /dev/null -X PUT -T $slug_file "$put_url"
 	fi
 fi

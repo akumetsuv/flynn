@@ -5,8 +5,8 @@ RUN adduser slugbuilder sudo
 RUN passwd -d slugbuilder
 
 # allow user RW access to /app
-RUN mkdir /app
-RUN chown -R slugbuilder:slugbuilder /app
+RUN mkdir /app /env
+RUN chown -R slugbuilder:slugbuilder /app /env
 
 RUN apt-get update
 RUN apt-get install -y libicu-dev

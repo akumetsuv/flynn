@@ -178,13 +178,7 @@ func appendEnvDir(stdin io.Reader, pipe io.WriteCloser, env map[string]string) {
 			log.Fatalln(err)
 		}
 	}
-	hdr := &tar.Header{
-		Name:    ".ENV_DIR_bdca46b87df0537eaefe79bb632d37709ff1df18",
-		Mode:    0444,
-		ModTime: time.Now(),
-		Size:    0,
-	}
-	if err := tw.WriteHeader(hdr); err != nil {
+	if err := tw.Close(); err != nil {
 		log.Fatalln(err)
 	}
 }
